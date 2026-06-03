@@ -34,6 +34,8 @@ def api_root(request):
             'refresh':  '/api/accounts/refresh/',
             'me':       '/api/accounts/me/',
             'students': '/api/students/',
+            'fees':     '/api/fees/',
+            
         }
     })
 
@@ -42,6 +44,7 @@ urlpatterns = [
     path('admin/',        admin.site.urls),
     path('api/accounts/', include('accounts.urls')),
     path('api/students/', include('students.urls')),
+    path('api/fees/',     include('fees.urls')), 
 
 
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
