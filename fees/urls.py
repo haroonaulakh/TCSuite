@@ -7,11 +7,11 @@ from .views import (
 )
 
 router = DefaultRouter()
-router.register('classrooms',           ClassRoomViewSet,          basename='classrooms')
-router.register('academic-years',       AcademicYearViewSet,       basename='academic-years')
-router.register('structures',           FeeStructureViewSet,       basename='fee-structures')
-router.register('records',              FeeRecordViewSet,          basename='fee-records')
-router.register('saved-balance-sheets', SavedBalanceSheetViewSet,  basename='saved-balance-sheets')
+router.register('classrooms',      ClassRoomViewSet,          basename='classrooms')
+router.register('academic-years',  AcademicYearViewSet,       basename='academic-years')
+router.register('structures',      FeeStructureViewSet,       basename='fee-structures')
+router.register('records',         FeeRecordViewSet,          basename='fee-records')
+router.register('saved-balance-sheets', SavedBalanceSheetViewSet, basename='saved-balance-sheets')
 
 urlpatterns = [
     path('', include(router.urls)),

@@ -114,7 +114,6 @@ class FeeRecordCreateSerializer(serializers.ModelSerializer):
 
 
 class FeeRecordEditSerializer(serializers.ModelSerializer):
-    """Full edit of any fee record."""
     class Meta:
         model  = FeeRecord
         fields = [
@@ -165,7 +164,6 @@ class FeeInvoiceSerializer(serializers.ModelSerializer):
 
 
 class BulkGenerateSerializer(serializers.Serializer):
-    """Used for POST /api/fees/records/bulk-generate/"""
     current_class = serializers.CharField()
     month         = serializers.IntegerField(min_value=1, max_value=12)
     year          = serializers.IntegerField(min_value=2020, max_value=2099)
@@ -173,17 +171,13 @@ class BulkGenerateSerializer(serializers.Serializer):
 
 
 class AdvancePaymentSerializer(serializers.Serializer):
-    """POST /api/fees/records/advance-payment/"""
     student_ids  = serializers.ListField(
-        child=serializers.IntegerField(), min_length=1
-    )
+        child=serializers.IntegerField(), min_length=1)
     months       = serializers.ListField(
-        child=serializers.IntegerField(min_value=1, max_value=12), min_length=1
-    )
+        child=serializers.IntegerField(min_value=1, max_value=12), min_length=1)
     year         = serializers.IntegerField(min_value=2020, max_value=2099)
     amount_paid  = serializers.DecimalField(
-        max_digits=10, decimal_places=2, required=False, allow_null=True
-    )
+        max_digits=10, decimal_places=2, required=False, allow_null=True)
     due_date     = serializers.DateField(required=False, allow_null=True)
     remarks      = serializers.CharField(required=False, allow_blank=True, default='')
 

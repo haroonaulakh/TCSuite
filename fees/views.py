@@ -24,6 +24,7 @@ class ClassRoomViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='with-fee-stats')
     def with_fee_stats(self, request):
+        
         month = request.query_params.get('month')
         year  = request.query_params.get('year')
 
@@ -63,6 +64,7 @@ class ClassRoomViewSet(viewsets.ModelViewSet):
 
     @action(detail=True, methods=['get'], url_path='students-fee')
     def students_fee(self, request, pk=None):
+        
         classroom = self.get_object()
         month = request.query_params.get('month')
         year  = request.query_params.get('year')
@@ -129,6 +131,7 @@ class ClassRoomViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['post'], url_path='sync-from-students')
     def sync_from_students(self, request):
+        
         classes = StudentProfile.objects.values_list('current_class', flat=True).distinct()
         classes = set(c.strip() for c in classes if c and c.strip())
         created = 0
@@ -191,6 +194,7 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
             qs = qs.filter(student__current_class__iexact=current_class)
         return qs
 
+    # Record payment 
     @action(detail=True, methods=['patch'], url_path='record-payment')
     def record_payment(self, request, pk=None):
         record     = self.get_object()
@@ -200,11 +204,13 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
             return Response(FeeRecordDetailSerializer(record).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # Individual invoice data 
     @action(detail=True, methods=['get'], url_path='invoice')
     def invoice(self, request, pk=None):
         record = self.get_object()
         return Response(FeeInvoiceSerializer(record).data)
 
+    # Individual invoice PDF 
     @action(detail=True, methods=['get'], url_path='invoice-pdf')
     def invoice_pdf(self, request, pk=None):
         record = self.get_object()
@@ -215,6 +221,7 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
 
+    # Class invoice data 
     @action(detail=False, methods=['get'], url_path='class-invoice')
     def class_invoice(self, request):
         month         = request.query_params.get('month')
@@ -249,6 +256,7 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
             'total_students': qs.count(),
         })
 
+    # Class invoice PDF 
     @action(detail=False, methods=['get'], url_path='class-invoice-pdf')
     def class_invoice_pdf(self, request):
         month         = request.query_params.get('month')
@@ -283,8 +291,14 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
 
+    # Bulk generate fee records for a class 
     @action(detail=False, methods=['post'], url_path='bulk-generate')
     def bulk_generate(self, request):
+        """
+        POST /api/fees/records/bulk-generate/
+        Body: { current_class, month, year, due_date? }
+        Creates fee records for all active students in that class who don't already have one.
+        """
         ser = BulkGenerateSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
         d = ser.validated_data
@@ -309,6 +323,7 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
                 skipped += 1
                 continue
 
+            # Determine fee
             fee = None
             if student.current_fee:
                 fee = student.current_fee
@@ -345,8 +360,14 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
             'total_students': students.count(),
         })
 
+    # Bulk invoices PDF 
     @action(detail=False, methods=['get'], url_path='bulk-invoices-pdf')
     def bulk_invoices_pdf(self, request):
+        """
+        GET /api/fees/records/bulk-invoices-pdf/?current_class=X&month=6&year=2026
+        Generates a single PDF with all student invoices for a class.
+        4 mini-invoices per A4 page (2 students x 2 copies each).
+        """
         month         = request.query_params.get('month')
         year          = request.query_params.get('year')
         current_class = request.query_params.get('current_class')
@@ -376,6 +397,7 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
 
+    # Edit any record 
     @action(detail=True, methods=['patch'], url_path='edit-record')
     def edit_record(self, request, pk=None):
         record     = self.get_object()
@@ -385,6 +407,7 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
             return Response(FeeRecordDetailSerializer(record).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    # Top Defaulters 
     @action(detail=False, methods=['get'], url_path='top-defaulters')
     def top_defaulters(self, request):
         limit = int(request.query_params.get('limit', 10))
@@ -393,6 +416,7 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
         ).order_by('-balance')[:limit]
         return Response(FeeRecordListSerializer(qs, many=True).data)
 
+    # Advance Payment
     @action(detail=False, methods=['post'], url_path='advance-payment')
     def advance_payment(self, request):
         ser = AdvancePaymentSerializer(data=request.data)
@@ -437,7 +461,7 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
                     amount_paid=fee,
                     is_advance=True,
                     due_date=d.get('due_date'),
-                    remarks=d.get('remarks', '') or "Advance payment",
+                    remarks=d.get('remarks', '') or f"Advance payment",
                 )
                 rec._force_status = 'advance'
                 rec.save()
@@ -459,6 +483,7 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
             'record_ids': record_ids,
         })
 
+    # Distinct Years 
     @action(detail=False, methods=['get'], url_path='distinct-years')
     def distinct_years(self, request):
         from django.utils import timezone
@@ -474,6 +499,7 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
             'current_year': current_year,
         })
 
+    # Student Fee History
     @action(detail=False, methods=['get'], url_path='student-fee-history')
     def student_fee_history(self, request):
         student_id = request.query_params.get('student')
@@ -492,18 +518,25 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
             yr = rec.year
             if yr not in years_data:
                 years_data[yr] = {
-                    'year': yr, 'months': {},
-                    'total_fee': 0, 'total_paid': 0, 'total_balance': 0, 'records_count': 0,
+                    'year': yr,
+                    'months': {},
+                    'total_fee': 0,
+                    'total_paid': 0,
+                    'total_balance': 0,
+                    'records_count': 0,
                 }
             years_data[yr]['months'][rec.month] = {
-                'id': rec.id, 'receipt_no': rec.receipt_no,
-                'month': rec.month, 'month_name': rec.get_month_display(),
+                'id': rec.id,
+                'receipt_no': rec.receipt_no,
+                'month': rec.month,
+                'month_name': rec.get_month_display(),
                 'previous_balance': float(rec.previous_balance),
                 'current_fee': float(rec.current_fee),
                 'total_amount': float(rec.total_amount),
                 'amount_paid': float(rec.amount_paid),
                 'balance': float(rec.balance),
-                'status': rec.status, 'is_advance': rec.is_advance,
+                'status': rec.status,
+                'is_advance': rec.is_advance,
                 'due_date': str(rec.due_date) if rec.due_date else None,
                 'payment_date': str(rec.payment_date) if rec.payment_date else None,
                 'receipt_date': str(rec.receipt_date) if rec.receipt_date else None,
@@ -522,18 +555,26 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
                 if m in yd['months']:
                     months_list.append(yd['months'][m])
                 else:
-                    months_list.append({'month': m, 'month_name': month_names.get(m, ''), 'status': 'no_record'})
+                    months_list.append({
+                        'month': m,
+                        'month_name': month_names.get(m, ''),
+                        'status': 'no_record',
+                    })
             yd['months'] = months_list
             result_years.append(yd)
 
         lifetime_agg = records.aggregate(
-            total_fee=Sum('current_fee'), total_paid=Sum('amount_paid'), total_balance=Sum('balance'),
+            total_fee=Sum('current_fee'),
+            total_paid=Sum('amount_paid'),
+            total_balance=Sum('balance'),
         )
 
         return Response({
             'student': {
-                'id': student.id, 'admission_no': student.admission_no,
-                'student_name': student.student_name, 'current_class': student.current_class,
+                'id': student.id,
+                'admission_no': student.admission_no,
+                'student_name': student.student_name,
+                'current_class': student.current_class,
                 'current_fee': float(student.current_fee) if student.current_fee else None,
             },
             'lifetime': {
@@ -545,6 +586,7 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
             'years': result_years,
         })
 
+    # Summary 
     @action(detail=False, methods=['get'], url_path='summary')
     def summary(self, request):
         qs = self.get_queryset()
@@ -558,8 +600,10 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
             'paid_count':      qs.filter(status='paid').count(),
         })
 
+    # Balance Sheet PDF 
     @action(detail=False, methods=['get'], url_path='balance-sheet-pdf')
     def balance_sheet_pdf(self, request):
+        
         bs_response = self.balance_sheet(request)
         pdf = generate_balance_sheet_pdf(bs_response.data)
         year = request.query_params.get('year', 'all')
@@ -568,6 +612,7 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
 
+    # Balance Sheet 
     @action(detail=False, methods=['get'], url_path='balance-sheet')
     def balance_sheet(self, request):
         from django.utils import timezone

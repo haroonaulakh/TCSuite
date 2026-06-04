@@ -3,7 +3,6 @@ from students.models import StudentProfile
 
 
 class ClassRoom(models.Model):
-    """Detected class names from student data. Used for grouping and fee management."""
     name        = models.CharField(max_length=100, unique=True)
     sort_order  = models.IntegerField(default=0, help_text="Order for display sorting")
     is_active   = models.BooleanField(default=True)
@@ -17,8 +16,7 @@ class ClassRoom(models.Model):
 
 
 class AcademicYear(models.Model):
-    """Tracks academic years for fee management."""
-    label       = models.CharField(max_length=50, unique=True)
+    label       = models.CharField(max_length=50, unique=True)  # e.g. "2025-2026"
     start_date  = models.CharField(max_length=20, blank=True)
     end_date    = models.CharField(max_length=20, blank=True)
     is_current  = models.BooleanField(default=False)
@@ -37,7 +35,6 @@ class AcademicYear(models.Model):
 
 
 class FeeStructure(models.Model):
-    """Monthly fee amount per class."""
     class_name  = models.CharField(max_length=100, unique=True)
     monthly_fee = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField(blank=True)
@@ -53,7 +50,6 @@ class FeeStructure(models.Model):
 
 
 def generate_receipt_no():
-    """Auto-generate receipt number like RCP-0001, RCP-0002..."""
     last = FeeRecord.objects.order_by('id').last()
     if not last:
         return 'RCP-0001'
@@ -62,8 +58,6 @@ def generate_receipt_no():
 
 
 class FeeRecord(models.Model):
-    """One row = one month's fee record for one student."""
-
     MONTH_CHOICES = [
         (1,  'January'),  (2,  'February'), (3,  'March'),
         (4,  'April'),    (5,  'May'),       (6,  'June'),
@@ -142,7 +136,6 @@ class FeeRecord(models.Model):
 
 
 class SavedBalanceSheet(models.Model):
-    """Snapshot of a yearly balance sheet stored in the DB for future reference."""
     year         = models.IntegerField(unique=True)
     data         = models.JSONField(help_text="Full balance sheet JSON snapshot")
     generated_at = models.DateTimeField(auto_now=True)
