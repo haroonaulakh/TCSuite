@@ -1,4 +1,4 @@
-# for invoice generation in PDF format
+﻿# for invoice generation in PDF format
 import io
 from reportlab.lib import colors
 from reportlab.lib.pagesizes import A4
@@ -161,7 +161,7 @@ def generate_class_invoice_pdf(class_name, month, year, records, summary):
     month_name = MONTHS[int(month)] if int(month) <= 12 else str(month)
 
     story.append(Paragraph(SCHOOL_NAME, ss['SchoolName']))
-    story.append(Paragraph(f"Fee Collection Sheet — {class_name} — {month_name} {year}", ss['SubTitle']))
+    story.append(Paragraph(f"Fee Collection Sheet ΓÇö {class_name} ΓÇö {month_name} {year}", ss['SubTitle']))
     story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#1d4ed8'), spaceAfter=8))
 
     tc = _num(summary.get('total_collected', 0))
@@ -279,7 +279,7 @@ def _draw_mini_invoice(c, x, y, w, h, record, copy_label):
 
     c.setFillColor(gray)
     c.setFont('Helvetica', 6.5)
-    c.drawCentredString(x + w / 2, top - 20, f"Fee Invoice  —  {copy_label}")
+    c.drawCentredString(x + w / 2, top - 20, f"Fee Invoice  ΓÇö  {copy_label}")
 
     c.setStrokeColor(blue)
     c.setLineWidth(0.8)
@@ -512,7 +512,7 @@ def generate_balance_sheet_pdf(data):
     ys = data.get('yearly_summary', {})
 
     story.append(Paragraph(SCHOOL_NAME, ss['SchoolName']))
-    story.append(Paragraph(f"Balance Sheet — Annual Financial Report — {year}", ss['SubTitle']))
+    story.append(Paragraph(f"Balance Sheet ΓÇö Annual Financial Report ΓÇö {year}", ss['SubTitle']))
     story.append(HRFlowable(width="100%", thickness=1, color=colors.HexColor('#1d4ed8'),
                             spaceAfter=8))
 

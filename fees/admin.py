@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ClassRoom, AcademicYear, FeeStructure, FeeRecord
+from .models import ClassRoom, AcademicYear, FeeStructure, FeeRecord, SavedBalanceSheet
 
 
 @admin.register(ClassRoom)
@@ -34,3 +34,8 @@ class FeeRecordAdmin(admin.ModelAdmin):
         'receipt_no', 'student__student_name', 'student__admission_no',
     ]
     readonly_fields = ['receipt_no', 'total_amount', 'balance', 'receipt_date']
+
+
+@admin.register(SavedBalanceSheet)
+class SavedBalanceSheetAdmin(admin.ModelAdmin):
+    list_display = ['year', 'generated_at']

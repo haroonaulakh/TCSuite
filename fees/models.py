@@ -16,7 +16,6 @@ class ClassRoom(models.Model):
 
 
 class AcademicYear(models.Model):
-
     label       = models.CharField(max_length=50, unique=True)  # e.g. "2025-2026"
     start_date  = models.CharField(max_length=20, blank=True)
     end_date    = models.CharField(max_length=20, blank=True)
@@ -36,7 +35,6 @@ class AcademicYear(models.Model):
 
 
 class FeeStructure(models.Model):
-    
     class_name  = models.CharField(max_length=100, unique=True)
     monthly_fee = models.DecimalField(max_digits=10, decimal_places=2)
     description = models.TextField(blank=True)
@@ -52,7 +50,6 @@ class FeeStructure(models.Model):
 
 
 def generate_receipt_no():
-    
     last = FeeRecord.objects.order_by('id').last()
     if not last:
         return 'RCP-0001'
@@ -61,8 +58,6 @@ def generate_receipt_no():
 
 
 class FeeRecord(models.Model):
-    
-
     MONTH_CHOICES = [
         (1,  'January'),  (2,  'February'), (3,  'March'),
         (4,  'April'),    (5,  'May'),       (6,  'June'),
@@ -141,7 +136,6 @@ class FeeRecord(models.Model):
 
 
 class SavedBalanceSheet(models.Model):
-    
     year         = models.IntegerField(unique=True)
     data         = models.JSONField(help_text="Full balance sheet JSON snapshot")
     generated_at = models.DateTimeField(auto_now=True)

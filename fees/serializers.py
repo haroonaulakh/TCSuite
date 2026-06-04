@@ -16,17 +16,17 @@ class ClassRoomSerializer(serializers.ModelSerializer):
             current_class__iexact=obj.name
         ).exclude(withdrawn='yes').count()
 
+
 class AcademicYearSerializer(serializers.ModelSerializer):
     class Meta:
         model  = AcademicYear
         fields = '__all__'
 
+
 class FeeStructureSerializer(serializers.ModelSerializer):
     class Meta:
         model  = FeeStructure
         fields = '__all__'
-
-
 
 
 class FeeRecordListSerializer(serializers.ModelSerializer):
@@ -114,7 +114,6 @@ class FeeRecordCreateSerializer(serializers.ModelSerializer):
 
 
 class FeeRecordEditSerializer(serializers.ModelSerializer):
-    
     class Meta:
         model  = FeeRecord
         fields = [
@@ -132,7 +131,7 @@ class FeeRecordEditSerializer(serializers.ModelSerializer):
         force_status = validated_data.pop('status', None)
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
-        if force_status and force_status in ('unpaid', 'partial', 'paid', 'waived'):
+        if force_status and force_status in ('unpaid', 'partial', 'paid', 'waived', 'advance'):
             instance._force_status = force_status
         instance.save()
         return instance
@@ -163,8 +162,8 @@ class FeeInvoiceSerializer(serializers.ModelSerializer):
             'receipt_date', 'due_date', 'payment_date', 'remarks',
         ]
 
+
 class BulkGenerateSerializer(serializers.Serializer):
-    
     current_class = serializers.CharField()
     month         = serializers.IntegerField(min_value=1, max_value=12)
     year          = serializers.IntegerField(min_value=2020, max_value=2099)
@@ -172,7 +171,6 @@ class BulkGenerateSerializer(serializers.Serializer):
 
 
 class AdvancePaymentSerializer(serializers.Serializer):
-    
     student_ids  = serializers.ListField(
         child=serializers.IntegerField(), min_length=1)
     months       = serializers.ListField(
@@ -183,13 +181,12 @@ class AdvancePaymentSerializer(serializers.Serializer):
     due_date     = serializers.DateField(required=False, allow_null=True)
     remarks      = serializers.CharField(required=False, allow_blank=True, default='')
 
+
 class SavedBalanceSheetSerializer(serializers.ModelSerializer):
     class Meta:
         model  = SavedBalanceSheet
         fields = ['id', 'year', 'data', 'generated_at', 'created_at']
         read_only_fields = ['id', 'generated_at', 'created_at']
-
-
 
 
 class SavedBalanceSheetListSerializer(serializers.ModelSerializer):
