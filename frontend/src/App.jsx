@@ -14,6 +14,8 @@ import FeeDashboard from './pages/fees/FeeDashboard'
 import Classes from './pages/fees/Classes'
 import AcademicYears from './pages/fees/AcademicYears'
 import BalanceSheet from './pages/fees/BalanceSheet'
+import ChargeCategories from './pages/fees/ChargeCategories'
+import MiscCharges from './pages/fees/MiscCharges'
 import InvoiceStudent from './pages/fees/InvoiceStudent'
 import InvoiceClass from './pages/fees/InvoiceClass'
 
@@ -54,6 +56,8 @@ export default function App() {
           <Route path="balance-sheet" element={<BalanceSheet />} />
           <Route path="classes" element={<Classes />} />
           <Route path="academic-years" element={<AcademicYears />} />
+          <Route path="charge-categories" element={<ChargeCategories />} />
+          <Route path="misc-charges" element={<MiscCharges />} />
 
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>

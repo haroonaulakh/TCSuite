@@ -485,7 +485,7 @@ export default function FeeDashboard() {
                             <div className="px-5 py-8 text-center text-gray-400 text-sm">No students in this class</div>
                           ) : (
                             <div className="overflow-x-auto">
-                              <table className="w-full min-w-[900px]">
+                              <table className="w-full min-w-[1000px]">
                                 <thead className="bg-gray-50 dark:bg-gray-800">
                                   <tr>
                                     <th className="table-th">Adm #</th>
@@ -494,6 +494,7 @@ export default function FeeDashboard() {
                                     <th className="table-th">Contact</th>
                                     <th className="table-th text-right">Prev Bal</th>
                                     <th className="table-th text-right">Fee</th>
+                                    <th className="table-th text-right">Misc.</th>
                                     <th className="table-th text-right">Total</th>
                                     <th className="table-th text-right text-green-700">Paid</th>
                                     <th className="table-th text-right text-red-600">Balance</th>
@@ -539,6 +540,11 @@ export default function FeeDashboard() {
                                                 : <span className="text-gray-300">0</span>}
                                             </td>
                                             <td className="table-td text-right font-mono text-xs">Rs {Number(r.current_fee).toLocaleString()}</td>
+                                            <td className="table-td text-right font-mono text-xs">
+                                              {Number(r.misc_charges) > 0
+                                                ? <span className="text-orange-600">Rs {Number(r.misc_charges).toLocaleString()}</span>
+                                                : <span className="text-gray-300">0</span>}
+                                            </td>
                                             <td className="table-td text-right font-mono text-xs font-medium">Rs {Number(r.total_amount).toLocaleString()}</td>
                                             <td className="table-td text-right font-mono text-xs text-green-700">Rs {Number(r.amount_paid).toLocaleString()}</td>
                                             <td className="table-td text-right font-mono text-xs">
@@ -549,7 +555,7 @@ export default function FeeDashboard() {
                                             <td className="table-td text-center"><Badge value={r.status} /></td>
                                           </>
                                         ) : (
-                                          <td colSpan={6} className="table-td text-center text-xs text-amber-500 italic">
+                                          <td colSpan={7} className="table-td text-center text-xs text-amber-500 italic">
                                             No fee record for this period
                                           </td>
                                         )}
@@ -567,6 +573,9 @@ export default function FeeDashboard() {
                                       </td>
                                       <td className="table-td text-right font-mono">
                                         Rs {detail.students.reduce((s, st) => s + (st.fee_record?.current_fee || 0), 0).toLocaleString()}
+                                      </td>
+                                      <td className="table-td text-right font-mono text-orange-600">
+                                        Rs {detail.students.reduce((s, st) => s + Number(st.fee_record?.misc_charges || 0), 0).toLocaleString()}
                                       </td>
                                       <td className="table-td text-right font-mono">
                                         Rs {Number(detail.summary.total_due).toLocaleString()}

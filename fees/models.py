@@ -92,6 +92,8 @@ class FeeRecord(models.Model):
     due_date          = models.DateField(null=True, blank=True)
     payment_date      = models.DateField(null=True, blank=True)
 
+    misc_charges      = models.DecimalField(max_digits=10, decimal_places=2, default=0,
+                            help_text="Sum of miscellaneous charges for this period.")
     is_advance        = models.BooleanField(default=False,
                             help_text="True if this record was created via advance payment.")
 
@@ -107,7 +109,7 @@ class FeeRecord(models.Model):
         if not self.receipt_no:
             self.receipt_no = generate_receipt_no()
 
-        self.total_amount = (self.previous_balance or 0) + (self.current_fee or 0)
+        self.total_amount = (self.previous_balance or 0) + (self.current_fee or 0) + (self.misc_charges or 0)
         self.balance      = self.total_amount - (self.amount_paid or 0)
 
         force_status = getattr(self, '_force_status', None)
@@ -133,6 +135,47 @@ class FeeRecord(models.Model):
 
     def __str__(self):
         return f"{self.receipt_no} — {self.student.student_name} — {self.get_month_display()} {self.year}"
+
+
+class ChargeCategory(models.Model):
+    """Categories for miscellaneous charges: books, notebooks, diaries, etc."""
+    name        = models.CharField(max_length=150, unique=True)
+    amount      = models.DecimalField(max_digits=10, decimal_places=2, default=0,
+                      help_text="Default/fixed charge amount for this category")
+    description = models.TextField(blank=True)
+    is_active   = models.BooleanField(default=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
+    updated_at  = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        verbose_name_plural = 'Charge Categories'
+
+    def __str__(self):
+        return f"{self.name} — Rs. {self.amount}"
+
+
+class MiscCharge(models.Model):
+    """A single miscellaneous charge record for a student."""
+    student     = models.ForeignKey(
+                      StudentProfile, on_delete=models.PROTECT,
+                      related_name='misc_charges')
+    category    = models.ForeignKey(
+                      ChargeCategory, on_delete=models.PROTECT,
+                      related_name='charges')
+    amount      = models.DecimalField(max_digits=10, decimal_places=2)
+    month       = models.IntegerField(choices=FeeRecord.MONTH_CHOICES)
+    year        = models.IntegerField()
+    charge_date = models.DateField(auto_now_add=True)
+    remarks     = models.TextField(blank=True)
+    created_at  = models.DateTimeField(auto_now_add=True)
+    updated_at  = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-year', '-month', '-created_at']
+
+    def __str__(self):
+        return f"{self.student.student_name} — {self.category.name} — Rs. {self.amount}"
 
 
 class SavedBalanceSheet(models.Model):

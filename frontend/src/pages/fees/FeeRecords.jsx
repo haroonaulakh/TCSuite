@@ -405,7 +405,7 @@ export default function FeeRecords() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1050px]">
+            <table className="w-full min-w-[1150px]">
               <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
                 <tr>
                   <th className="table-th">Receipt</th>
@@ -414,6 +414,7 @@ export default function FeeRecords() {
                   <th className="table-th">Period</th>
                   <th className="table-th">Prev Bal</th>
                   <th className="table-th">Fee</th>
+                  <th className="table-th">Misc.</th>
                   <th className="table-th">Total</th>
                   <th className="table-th text-green-700">Paid</th>
                   <th className="table-th text-red-600">Balance</th>
@@ -455,6 +456,11 @@ export default function FeeRecords() {
                         : <span className="text-gray-300">0</span>}
                     </td>
                     <td className="table-td font-mono text-xs">Rs {Number(r.current_fee).toLocaleString()}</td>
+                    <td className="table-td font-mono text-xs">
+                      {Number(r.misc_charges) > 0
+                        ? <span className="text-orange-600">Rs {Number(r.misc_charges).toLocaleString()}</span>
+                        : <span className="text-gray-300">0</span>}
+                    </td>
                     <td className="table-td font-mono text-xs font-medium">Rs {Number(r.total_amount).toLocaleString()}</td>
                     <td className="table-td font-mono text-xs text-green-700">Rs {Number(r.amount_paid).toLocaleString()}</td>
                     <td className="table-td font-mono text-xs">

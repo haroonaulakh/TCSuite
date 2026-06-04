@@ -121,3 +121,29 @@ export const getSavedBalanceSheet = (id) =>
 
 export const downloadSavedBalanceSheetPdf = (id) =>
   client.get(`/fees/saved-balance-sheets/${id}/download-pdf/`, { responseType: 'blob' })
+
+// ── Charge Categories ────────────────────────────
+export const getChargeCategories = (params) =>
+  client.get('/fees/charge-categories/', { params })
+
+export const createChargeCategory = (data) =>
+  client.post('/fees/charge-categories/', data)
+
+export const updateChargeCategory = (id, data) =>
+  client.put(`/fees/charge-categories/${id}/`, data)
+
+export const deleteChargeCategory = (id) =>
+  client.delete(`/fees/charge-categories/${id}/`)
+
+// ── Misc Charges ─────────────────────────────────
+export const getMiscCharges = (params) =>
+  client.get('/fees/misc-charges/', { params })
+
+export const createMiscCharge = (data) =>
+  client.post('/fees/misc-charges/', data)
+
+export const deleteMiscCharge = (id) =>
+  client.delete(`/fees/misc-charges/${id}/`)
+
+export const getMiscChargeSummary = (params) =>
+  client.get('/fees/misc-charges/student-summary/', { params })

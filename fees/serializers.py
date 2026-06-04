@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import ClassRoom, AcademicYear, FeeStructure, FeeRecord, SavedBalanceSheet
+from .models import ClassRoom, AcademicYear, FeeStructure, FeeRecord, SavedBalanceSheet, ChargeCategory, MiscCharge
 from students.models import StudentProfile
 from students.serializers import StudentFeeInfoSerializer
 
@@ -45,7 +45,7 @@ class FeeRecordListSerializer(serializers.ModelSerializer):
             'f_g_name', 'f_g_contact',
             'month', 'month_name', 'year',
             'previous_balance', 'current_fee', 'total_amount',
-            'amount_paid', 'balance', 'status', 'is_advance',
+            'amount_paid', 'balance', 'status', 'is_advance', 'misc_charges',
             'due_date', 'payment_date', 'receipt_date',
         ]
 
@@ -60,7 +60,7 @@ class FeeRecordDetailSerializer(serializers.ModelSerializer):
             'id', 'receipt_no',
             'student', 'month', 'month_name', 'year',
             'previous_balance', 'current_fee', 'total_amount',
-            'amount_paid', 'balance', 'status', 'is_advance',
+            'amount_paid', 'balance', 'status', 'is_advance', 'misc_charges',
             'receipt_date', 'due_date', 'payment_date',
             'remarks', 'created_at', 'updated_at',
         ]
@@ -71,7 +71,7 @@ class FeeRecordCreateSerializer(serializers.ModelSerializer):
         model  = FeeRecord
         fields = [
             'student', 'month', 'year',
-            'previous_balance', 'current_fee',
+            'previous_balance', 'current_fee', 'misc_charges',
             'amount_paid', 'due_date', 'remarks',
         ]
 
@@ -117,7 +117,7 @@ class FeeRecordEditSerializer(serializers.ModelSerializer):
     class Meta:
         model  = FeeRecord
         fields = [
-            'previous_balance', 'current_fee',
+            'previous_balance', 'current_fee', 'misc_charges',
             'amount_paid', 'status',
             'due_date', 'payment_date', 'remarks',
         ]
@@ -158,7 +158,7 @@ class FeeInvoiceSerializer(serializers.ModelSerializer):
             'id', 'receipt_no',
             'student', 'month', 'month_name', 'year',
             'previous_balance', 'current_fee', 'total_amount',
-            'amount_paid', 'balance', 'status', 'is_advance',
+            'amount_paid', 'balance', 'status', 'is_advance', 'misc_charges',
             'receipt_date', 'due_date', 'payment_date', 'remarks',
         ]
 
@@ -193,3 +193,49 @@ class SavedBalanceSheetListSerializer(serializers.ModelSerializer):
     class Meta:
         model  = SavedBalanceSheet
         fields = ['id', 'year', 'generated_at', 'created_at']
+
+
+class ChargeCategorySerializer(serializers.ModelSerializer):
+    charges_count = serializers.SerializerMethodField()
+
+    class Meta:
+        model  = ChargeCategory
+        fields = ['id', 'name', 'amount', 'description', 'is_active', 'charges_count', 'created_at', 'updated_at']
+
+    def get_charges_count(self, obj):
+        return obj.charges.count()
+
+
+class MiscChargeListSerializer(serializers.ModelSerializer):
+    student_name  = serializers.CharField(source='student.student_name', read_only=True)
+    admission_no  = serializers.CharField(source='student.admission_no', read_only=True)
+    current_class = serializers.CharField(source='student.current_class', read_only=True)
+    category_name = serializers.CharField(source='category.name', read_only=True)
+    month_name    = serializers.SerializerMethodField()
+
+    class Meta:
+        model  = MiscCharge
+        fields = [
+            'id', 'student', 'student_name', 'admission_no', 'current_class',
+            'category', 'category_name', 'amount',
+            'month', 'month_name', 'year',
+            'charge_date', 'remarks', 'created_at',
+        ]
+
+    def get_month_name(self, obj):
+        return dict(FeeRecord.MONTH_CHOICES).get(obj.month, '')
+
+
+class MiscChargeCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model  = MiscCharge
+        fields = ['student', 'category', 'amount', 'month', 'year', 'remarks']
+
+    def validate(self, data):
+        if not data.get('amount') or data['amount'] <= 0:
+            cat = data.get('category')
+            if cat and cat.amount > 0:
+                data['amount'] = cat.amount
+            else:
+                raise serializers.ValidationError("Amount must be greater than zero.")
+        return data

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import ClassRoom, AcademicYear, FeeStructure, FeeRecord, SavedBalanceSheet
+from .models import ClassRoom, AcademicYear, FeeStructure, FeeRecord, SavedBalanceSheet, ChargeCategory, MiscCharge
 
 
 @admin.register(ClassRoom)
@@ -39,3 +39,17 @@ class FeeRecordAdmin(admin.ModelAdmin):
 @admin.register(SavedBalanceSheet)
 class SavedBalanceSheetAdmin(admin.ModelAdmin):
     list_display = ['year', 'generated_at']
+
+
+@admin.register(ChargeCategory)
+class ChargeCategoryAdmin(admin.ModelAdmin):
+    list_display  = ['name', 'amount', 'is_active']
+    list_editable = ['amount', 'is_active']
+    search_fields = ['name']
+
+
+@admin.register(MiscCharge)
+class MiscChargeAdmin(admin.ModelAdmin):
+    list_display  = ['student', 'category', 'amount', 'month', 'year', 'charge_date']
+    list_filter   = ['category', 'month', 'year']
+    search_fields = ['student__student_name', 'student__admission_no', 'category__name']

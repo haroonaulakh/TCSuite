@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django.http import HttpResponse
 from django.db.models import Sum, Count, Q
-from .models import ClassRoom, AcademicYear, FeeStructure, FeeRecord, SavedBalanceSheet
+from .models import ClassRoom, AcademicYear, FeeStructure, FeeRecord, SavedBalanceSheet, ChargeCategory, MiscCharge
 from .serializers import (
     ClassRoomSerializer, AcademicYearSerializer,
     FeeStructureSerializer,
@@ -13,6 +13,8 @@ from .serializers import (
     FeeInvoiceSerializer, BulkGenerateSerializer,
     AdvancePaymentSerializer,
     SavedBalanceSheetSerializer, SavedBalanceSheetListSerializer,
+    ChargeCategorySerializer,
+    MiscChargeListSerializer, MiscChargeCreateSerializer,
 )
 from .pdf import generate_student_invoice_pdf, generate_class_invoice_pdf, generate_bulk_invoices_pdf, generate_balance_sheet_pdf
 from students.models import StudentProfile
@@ -24,47 +26,75 @@ class ClassRoomViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='with-fee-stats')
     def with_fee_stats(self, request):
-        
         month = request.query_params.get('month')
         year  = request.query_params.get('year')
 
-        result = []
-        for cr in ClassRoom.objects.filter(is_active=True):
-            students = StudentProfile.objects.filter(
-                current_class__iexact=cr.name
-            ).exclude(withdrawn='yes')
-            entry = {
-                'id': cr.id,
-                'name': cr.name,
-                'sort_order': cr.sort_order,
-                'student_count': students.count(),
-            }
+        from django.db.models import Count as DjCount, Value
+        from django.db.models.functions import Lower
 
-            if month and year:
-                fee_qs = FeeRecord.objects.filter(
-                    student__current_class__iexact=cr.name,
-                    month=month, year=year,
-                )
-                agg = fee_qs.aggregate(
+        classrooms = ClassRoom.objects.filter(is_active=True)
+
+        student_counts = dict(
+            StudentProfile.objects.exclude(withdrawn='yes')
+            .values_list('current_class')
+            .annotate(cnt=DjCount('id'))
+            .values_list('current_class', 'cnt')
+        )
+
+        fee_stats_by_class = {}
+        if month and year:
+            raw = (
+                FeeRecord.objects.filter(month=month, year=year)
+                .values('student__current_class')
+                .annotate(
+                    records_count=DjCount('id'),
                     total_due=Sum('total_amount'),
                     total_collected=Sum('amount_paid'),
                     total_balance=Sum('balance'),
+                    paid_count=DjCount('id', filter=Q(status='paid')),
+                    unpaid_count=DjCount('id', filter=Q(status='unpaid')),
+                    partial_count=DjCount('id', filter=Q(status='partial')),
                 )
-                entry['fee_stats'] = {
-                    'records_count':  fee_qs.count(),
-                    'total_due':      float(agg['total_due'] or 0),
-                    'total_collected': float(agg['total_collected'] or 0),
-                    'total_balance':  float(agg['total_balance'] or 0),
-                    'paid_count':     fee_qs.filter(status='paid').count(),
-                    'unpaid_count':   fee_qs.filter(status='unpaid').count(),
-                    'partial_count':  fee_qs.filter(status='partial').count(),
-                }
+            )
+            for row in raw:
+                fee_stats_by_class[row['student__current_class']] = row
+
+        result = []
+        for cr in classrooms:
+            sc = 0
+            for k, v in student_counts.items():
+                if k and k.lower() == cr.name.lower():
+                    sc += v
+            entry = {
+                'id': cr.id, 'name': cr.name,
+                'sort_order': cr.sort_order, 'student_count': sc,
+            }
+            if month and year:
+                fs = None
+                for k, v in fee_stats_by_class.items():
+                    if k and k.lower() == cr.name.lower():
+                        fs = v
+                        break
+                if fs:
+                    entry['fee_stats'] = {
+                        'records_count':   fs['records_count'],
+                        'total_due':       float(fs['total_due'] or 0),
+                        'total_collected': float(fs['total_collected'] or 0),
+                        'total_balance':   float(fs['total_balance'] or 0),
+                        'paid_count':      fs['paid_count'],
+                        'unpaid_count':    fs['unpaid_count'],
+                        'partial_count':   fs['partial_count'],
+                    }
+                else:
+                    entry['fee_stats'] = {
+                        'records_count': 0, 'total_due': 0, 'total_collected': 0,
+                        'total_balance': 0, 'paid_count': 0, 'unpaid_count': 0, 'partial_count': 0,
+                    }
             result.append(entry)
         return Response(result)
 
     @action(detail=True, methods=['get'], url_path='students-fee')
     def students_fee(self, request, pk=None):
-        
         classroom = self.get_object()
         month = request.query_params.get('month')
         year  = request.query_params.get('year')
@@ -73,38 +103,49 @@ class ClassRoomViewSet(viewsets.ModelViewSet):
             current_class__iexact=classroom.name
         ).exclude(withdrawn='yes').order_by('admission_no')
 
+        records_map = {}
+        if month and year:
+            recs = FeeRecord.objects.filter(
+                student__current_class__iexact=classroom.name,
+                month=int(month), year=int(year),
+            ).select_related('student')
+            records_map = {r.student_id: r for r in recs}
+
+        from .models import MiscCharge
+        misc_map = {}
+        if month and year:
+            misc_qs = MiscCharge.objects.filter(
+                student__current_class__iexact=classroom.name,
+                month=int(month), year=int(year),
+            ).values('student_id').annotate(total=Sum('amount'))
+            misc_map = {row['student_id']: float(row['total']) for row in misc_qs}
+
         result = []
         for s in students:
             entry = {
-                'id': s.id,
-                'admission_no': s.admission_no,
-                'student_name': s.student_name,
-                'f_g_name': s.f_g_name,
+                'id': s.id, 'admission_no': s.admission_no,
+                'student_name': s.student_name, 'f_g_name': s.f_g_name,
                 'f_g_contact': s.f_g_contact,
                 'current_fee': float(s.current_fee) if s.current_fee else None,
                 'arrear_dues': s.arrear_dues,
-                'fee_record': None,
+                'fee_record': None, 'misc_charges': misc_map.get(s.id, 0),
             }
 
-            if month and year:
-                rec = FeeRecord.objects.filter(
-                    student=s, month=int(month), year=int(year)
-                ).first()
-                if rec:
-                    entry['fee_record'] = {
-                        'id': rec.id,
-                        'receipt_no': rec.receipt_no,
-                        'previous_balance': float(rec.previous_balance),
-                        'current_fee': float(rec.current_fee),
-                        'total_amount': float(rec.total_amount),
-                        'amount_paid': float(rec.amount_paid),
-                        'balance': float(rec.balance),
-                        'status': rec.status,
-                        'is_advance': rec.is_advance,
-                        'due_date': str(rec.due_date) if rec.due_date else None,
-                        'payment_date': str(rec.payment_date) if rec.payment_date else None,
-                        'receipt_date': str(rec.receipt_date) if rec.receipt_date else None,
-                    }
+            rec = records_map.get(s.id)
+            if rec:
+                entry['fee_record'] = {
+                    'id': rec.id, 'receipt_no': rec.receipt_no,
+                    'previous_balance': float(rec.previous_balance),
+                    'current_fee': float(rec.current_fee),
+                    'total_amount': float(rec.total_amount),
+                    'amount_paid': float(rec.amount_paid),
+                    'balance': float(rec.balance),
+                    'status': rec.status, 'is_advance': rec.is_advance,
+                    'misc_charges': float(rec.misc_charges),
+                    'due_date': str(rec.due_date) if rec.due_date else None,
+                    'payment_date': str(rec.payment_date) if rec.payment_date else None,
+                    'receipt_date': str(rec.receipt_date) if rec.receipt_date else None,
+                }
             result.append(entry)
 
         total_students = len(result)
@@ -114,17 +155,13 @@ class ClassRoomViewSet(viewsets.ModelViewSet):
         agg_balance = sum(r['fee_record']['balance'] for r in result if r['fee_record'])
 
         return Response({
-            'class_name': classroom.name,
-            'class_id': classroom.id,
-            'month': month,
-            'year': year,
+            'class_name': classroom.name, 'class_id': classroom.id,
+            'month': month, 'year': year,
             'total_students': total_students,
             'records_generated': with_records,
             'without_records': total_students - with_records,
             'summary': {
-                'total_due': agg_due,
-                'total_collected': agg_collected,
-                'total_balance': agg_balance,
+                'total_due': agg_due, 'total_collected': agg_collected, 'total_balance': agg_balance,
             },
             'students': result,
         })
@@ -342,12 +379,17 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
             except (ValueError, TypeError):
                 arrear = 0
 
+            misc_total = MiscCharge.objects.filter(
+                student=student, month=d['month'], year=d['year']
+            ).aggregate(t=Sum('amount'))['t'] or 0
+
             FeeRecord.objects.create(
                 student=student,
                 month=d['month'],
                 year=d['year'],
                 previous_balance=arrear,
                 current_fee=fee,
+                misc_charges=misc_total,
                 amount_paid=0,
                 due_date=d.get('due_date'),
             )
@@ -526,17 +568,15 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
                     'records_count': 0,
                 }
             years_data[yr]['months'][rec.month] = {
-                'id': rec.id,
-                'receipt_no': rec.receipt_no,
-                'month': rec.month,
-                'month_name': rec.get_month_display(),
+                'id': rec.id, 'receipt_no': rec.receipt_no,
+                'month': rec.month, 'month_name': rec.get_month_display(),
                 'previous_balance': float(rec.previous_balance),
                 'current_fee': float(rec.current_fee),
+                'misc_charges': float(rec.misc_charges),
                 'total_amount': float(rec.total_amount),
                 'amount_paid': float(rec.amount_paid),
                 'balance': float(rec.balance),
-                'status': rec.status,
-                'is_advance': rec.is_advance,
+                'status': rec.status, 'is_advance': rec.is_advance,
                 'due_date': str(rec.due_date) if rec.due_date else None,
                 'payment_date': str(rec.payment_date) if rec.payment_date else None,
                 'receipt_date': str(rec.receipt_date) if rec.receipt_date else None,
@@ -727,3 +767,81 @@ class SavedBalanceSheetViewSet(viewsets.ReadOnlyModelViewSet):
         response = HttpResponse(pdf, content_type='application/pdf')
         response['Content-Disposition'] = f'attachment; filename="{filename}"'
         return response
+
+
+class ChargeCategoryViewSet(viewsets.ModelViewSet):
+    queryset         = ChargeCategory.objects.all()
+    serializer_class = ChargeCategorySerializer
+    filter_backends  = [filters.SearchFilter]
+    search_fields    = ['name']
+
+
+class MiscChargeViewSet(viewsets.ModelViewSet):
+    queryset = MiscCharge.objects.select_related('student', 'category').all()
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields   = ['student__student_name', 'student__admission_no', 'category__name']
+    ordering_fields = ['charge_date', 'amount', 'year', 'month']
+    ordering        = ['-year', '-month', '-created_at']
+
+    def get_serializer_class(self):
+        if self.action in ('create',):
+            return MiscChargeCreateSerializer
+        return MiscChargeListSerializer
+
+    def get_queryset(self):
+        qs = super().get_queryset()
+        student_id = self.request.query_params.get('student')
+        category   = self.request.query_params.get('category')
+        month      = self.request.query_params.get('month')
+        year       = self.request.query_params.get('year')
+
+        if student_id and str(student_id).isdigit():
+            qs = qs.filter(student_id=student_id)
+        if category and str(category).isdigit():
+            qs = qs.filter(category_id=category)
+        if month:
+            qs = qs.filter(month=month)
+        if year:
+            qs = qs.filter(year=year)
+        return qs
+
+    def perform_create(self, serializer):
+        charge = serializer.save()
+        self._update_fee_record_misc(charge.student, charge.month, charge.year)
+
+    def perform_destroy(self, instance):
+        student, month, year = instance.student, instance.month, instance.year
+        instance.delete()
+        self._update_fee_record_misc(student, month, year)
+
+    def _update_fee_record_misc(self, student, month, year):
+        """Recalculate the misc_charges sum on the corresponding FeeRecord."""
+        total = MiscCharge.objects.filter(
+            student=student, month=month, year=year
+        ).aggregate(t=Sum('amount'))['t'] or 0
+        FeeRecord.objects.filter(
+            student=student, month=month, year=year
+        ).update(misc_charges=total)
+        try:
+            rec = FeeRecord.objects.get(student=student, month=month, year=year)
+            rec.save()
+        except FeeRecord.DoesNotExist:
+            pass
+
+    @action(detail=False, methods=['get'], url_path='student-summary')
+    def student_summary(self, request):
+        student_id = request.query_params.get('student')
+        if not student_id:
+            return Response({"detail": "student param required"}, status=status.HTTP_400_BAD_REQUEST)
+        qs = MiscCharge.objects.filter(student_id=student_id)
+        year = request.query_params.get('year')
+        if year:
+            qs = qs.filter(year=year)
+        by_cat = qs.values('category__name').annotate(
+            total=Sum('amount'), count=Count('id')
+        ).order_by('category__name')
+        return Response({
+            'total': float(qs.aggregate(t=Sum('amount'))['t'] or 0),
+            'count': qs.count(),
+            'by_category': list(by_cat),
+        })

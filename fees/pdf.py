@@ -95,16 +95,23 @@ def generate_student_invoice_pdf(record):
     story.append(Spacer(1, 12))
 
     story.append(Paragraph("Fee Breakdown", ss['SectionHead']))
+    misc = float(record.get('misc_charges', 0) or 0)
     fee_data = [
         ['Description', 'Amount'],
         ['Previous Balance', _num(record['previous_balance'])],
         ['Monthly Fee', _num(record['current_fee'])],
+    ]
+    if misc > 0:
+        fee_data.append(['Misc. Charges', _num(misc)])
+    fee_data.extend([
         ['Total Due', _num(record['total_amount'])],
         ['Amount Paid', _num(record['amount_paid'])],
         ['Balance Due', _num(record['balance'])],
-    ]
+    ])
+    total_row = len(fee_data) - 3
+    balance_row = len(fee_data) - 1
     t3 = Table(fee_data, colWidths=[300, 170])
-    t3.setStyle(TableStyle([
+    style_cmds = [
         ('BACKGROUND', (0, 0), (-1, 0), colors.HexColor('#1d4ed8')),
         ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
         ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
@@ -113,12 +120,13 @@ def generate_student_invoice_pdf(record):
         ('GRID', (0, 0), (-1, -1), 0.5, colors.HexColor('#e5e7eb')),
         ('BOTTOMPADDING', (0, 0), (-1, -1), 6),
         ('TOPPADDING', (0, 0), (-1, -1), 6),
-        ('BACKGROUND', (0, 3), (-1, 3), colors.HexColor('#eff6ff')),
-        ('FONTNAME', (0, 3), (-1, 3), 'Helvetica-Bold'),
-        ('BACKGROUND', (0, 5), (-1, 5), colors.HexColor('#fef2f2')),
-        ('FONTNAME', (0, 5), (-1, 5), 'Helvetica-Bold'),
-        ('TEXTCOLOR', (1, 5), (1, 5), colors.HexColor('#dc2626')),
-    ]))
+        ('BACKGROUND', (0, total_row), (-1, total_row), colors.HexColor('#eff6ff')),
+        ('FONTNAME', (0, total_row), (-1, total_row), 'Helvetica-Bold'),
+        ('BACKGROUND', (0, balance_row), (-1, balance_row), colors.HexColor('#fef2f2')),
+        ('FONTNAME', (0, balance_row), (-1, balance_row), 'Helvetica-Bold'),
+        ('TEXTCOLOR', (1, balance_row), (1, balance_row), colors.HexColor('#dc2626')),
+    ]
+    t3.setStyle(TableStyle(style_cmds))
     story.append(t3)
     story.append(Spacer(1, 8))
 
@@ -173,7 +181,7 @@ def generate_class_invoice_pdf(class_name, month, year, records, summary):
     story.append(Spacer(1, 6))
 
     header = ['#', 'Receipt', 'Adm #', 'Student Name', 'Father/Guardian', 'Contact',
-              'Prev Bal', 'Fee', 'Total', 'Paid', 'Balance', 'Status']
+              'Prev Bal', 'Fee', 'Misc', 'Total', 'Paid', 'Balance', 'Status']
     rows = [header]
     for i, r in enumerate(records, 1):
         s = r.get('student', {})
@@ -186,6 +194,7 @@ def generate_class_invoice_pdf(class_name, month, year, records, summary):
             s.get('f_g_contact', ''),
             _num(r.get('previous_balance', 0)),
             _num(r.get('current_fee', 0)),
+            _num(r.get('misc_charges', 0)),
             _num(r.get('total_amount', 0)),
             _num(r.get('amount_paid', 0)),
             _num(r.get('balance', 0)),
@@ -194,14 +203,14 @@ def generate_class_invoice_pdf(class_name, month, year, records, summary):
 
     rows.append([
         '', '', '', '', '', 'TOTALS',
-        '', '',
+        '', '', '',
         _num(summary.get('total_due', 0)),
         _num(summary.get('total_collected', 0)),
         _num(summary.get('total_balance', 0)),
         '',
     ])
 
-    col_widths = [20, 55, 40, 110, 100, 70, 55, 55, 60, 60, 60, 45]
+    col_widths = [18, 50, 38, 95, 90, 65, 50, 50, 40, 55, 55, 55, 40]
     t = Table(rows, colWidths=col_widths, repeatRows=1)
 
     style_cmds = [
@@ -392,30 +401,37 @@ def _draw_mini_invoice(c, x, y, w, h, record, copy_label):
     fee_rows = [
         ('Previous Balance', record.get('previous_balance', 0)),
         ('Monthly Fee', record.get('current_fee', 0)),
+    ]
+    misc_val = float(record.get('misc_charges', 0) or 0)
+    if misc_val > 0:
+        fee_rows.append(('Misc. Charges', misc_val))
+    fee_rows.extend([
         ('Total Due', record.get('total_amount', 0)),
         ('Amount Paid', record.get('amount_paid', 0)),
         ('Balance Due', record.get('balance', 0)),
-    ]
+    ])
+    total_idx = len(fee_rows) - 3
+    balance_idx = len(fee_rows) - 1
 
     table_top = row_y - header_h + small_gap
     for i, (label, val) in enumerate(fee_rows):
         ry = table_top - (i + 1) * table_row_h + 4
 
-        if i == 2:
+        if i == total_idx:
             c.setFillColor(light_blue)
             c.rect(cx, ry - 4, inner_w, table_row_h, fill=1, stroke=0)
-        if i == 4:
+        if i == balance_idx:
             c.setFillColor(colors.HexColor('#fef2f2'))
             c.rect(cx, ry - 4, inner_w, table_row_h, fill=1, stroke=0)
 
         c.setFillColor(colors.black)
-        is_bold = i in (2, 4)
+        is_bold = i in (total_idx, balance_idx)
         c.setFont('Helvetica-Bold' if is_bold else 'Helvetica', 6)
         c.drawString(cx + 4, ry, label)
 
-        if i == 4 and float(val or 0) > 0:
+        if i == balance_idx and float(val or 0) > 0:
             c.setFillColor(red)
-        elif i == 3:
+        elif i == balance_idx - 1:
             c.setFillColor(green)
         else:
             c.setFillColor(colors.black)
