@@ -1,14 +1,14 @@
 const variants = {
-  paid:    'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
-  partial: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
-  unpaid:  'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
-  advance: 'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300',
-  waived:  'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300',
-  yes:     'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300',
-  no:      'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-300',
-  active:  'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300',
-  inactive:'bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400',
-  default: 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300',
+  paid:    'bg-emerald-100/80 text-emerald-800 ring-1 ring-emerald-200/60 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-400/20',
+  partial: 'bg-amber-100/80 text-amber-800 ring-1 ring-amber-200/60 dark:bg-amber-500/15 dark:text-amber-300 dark:ring-amber-400/20',
+  unpaid:  'bg-rose-100/80 text-rose-800 ring-1 ring-rose-200/60 dark:bg-rose-500/15 dark:text-rose-300 dark:ring-rose-400/20',
+  advance: 'bg-teal-100/80 text-teal-800 ring-1 ring-teal-200/60 dark:bg-teal-500/15 dark:text-teal-300 dark:ring-teal-400/20',
+  waived:  'bg-slate-100/80 text-slate-600 ring-1 ring-slate-200/60 dark:bg-white/5 dark:text-slate-300 dark:ring-white/10',
+  yes:     'bg-rose-100/80 text-rose-700 ring-1 ring-rose-200/60 dark:bg-rose-500/15 dark:text-rose-300 dark:ring-rose-400/20',
+  no:      'bg-emerald-100/80 text-emerald-700 ring-1 ring-emerald-200/60 dark:bg-emerald-500/15 dark:text-emerald-300 dark:ring-emerald-400/20',
+  active:  'bg-blue-100/80 text-blue-700 ring-1 ring-blue-200/60 dark:bg-blue-500/15 dark:text-blue-300 dark:ring-blue-400/20',
+  inactive:'bg-slate-100/80 text-slate-500 ring-1 ring-slate-200/60 dark:bg-white/5 dark:text-slate-400 dark:ring-white/10',
+  default: 'bg-slate-100/80 text-slate-700 ring-1 ring-slate-200/60 dark:bg-white/5 dark:text-slate-300 dark:ring-white/10',
 }
 
 export default function Badge({ value, label }) {

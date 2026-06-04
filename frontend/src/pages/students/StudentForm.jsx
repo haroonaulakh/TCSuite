@@ -155,7 +155,7 @@ export default function StudentForm() {
           <span className="mx-2">/</span>
           <span className="text-gray-700">{isEdit ? 'Edit' : 'Enrol New Student'}</span>
         </nav>
-        <h1 className="text-2xl font-bold text-gray-900">
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 font-display tracking-tight">
           {isEdit ? 'Edit Student' : 'Enrol New Student'}
         </h1>
       </div>

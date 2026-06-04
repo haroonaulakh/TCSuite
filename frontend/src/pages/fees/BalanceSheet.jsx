@@ -85,7 +85,7 @@ export default function BalanceSheet() {
     <div className="p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Balance Sheet</h1>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 font-display tracking-tight">Balance Sheet</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">Comprehensive annual financial overview — auto-saved for each year</p>
         </div>
         <div className="flex gap-2 items-end">
@@ -140,7 +140,7 @@ export default function BalanceSheet() {
                     { label: 'Total Students', value: ys.total_students, color: 'text-blue-700' },
                     { label: 'Records', value: ys.total_records, color: 'text-blue-700' },
                     { label: 'Total Fee', value: fmt(ys.total_fee), color: 'text-gray-800' },
-                    { label: 'Total Due', value: fmt(ys.total_due), color: 'text-purple-700' },
+                    { label: 'Total Due', value: fmt(ys.total_due), color: 'text-teal-700 dark:text-teal-400' },
                     { label: 'Collected', value: fmt(ys.total_collected), color: 'text-green-700' },
                     { label: 'Outstanding', value: fmt(ys.total_balance), color: 'text-red-600' },
                   ].map(item => (

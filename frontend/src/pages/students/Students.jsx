@@ -324,7 +324,7 @@ export default function Students() {
     <div className="p-6 space-y-5">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold text-gray-900">Students</h1>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 font-display tracking-tight">Students</h1>
         <Link to="/students/new" className="btn-primary">
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />

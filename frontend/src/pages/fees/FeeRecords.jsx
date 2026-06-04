@@ -332,7 +332,7 @@ export default function FeeRecords() {
     <div className="p-6 space-y-5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Fee Records</h1>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 font-display tracking-tight">Fee Records</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">
             {filterMonth && filterYear
               ? `${currentMonthLabel} ${filterYear} — ${count} records`
@@ -362,7 +362,7 @@ export default function FeeRecords() {
               </Link>
             </>
           )}
-          <button className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm font-medium flex items-center gap-2" onClick={() => setAdvModal(true)}>
+          <button className="btn-accent" onClick={() => setAdvModal(true)}>
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
             </svg>
@@ -442,8 +442,8 @@ export default function FeeRecords() {
                     isDefaulter
                       ? 'bg-red-50/60 dark:bg-red-950/20 border-l-4 border-l-red-400'
                       : isAdvance
-                        ? 'bg-purple-50/60 dark:bg-purple-950/20 border-l-4 border-l-purple-400'
-                        : 'bg-white dark:bg-gray-900'
+                        ? 'bg-teal-50/60 dark:bg-teal-950/20 border-l-4 border-l-teal-400'
+                        : 'bg-white/40 dark:bg-white/[0.02]'
                   }>
                     <td className="table-td font-mono text-xs text-blue-700">{r.receipt_display || r.receipt_no}</td>
                     <td className="table-td">
@@ -576,8 +576,8 @@ export default function FeeRecords() {
                     isDefaulter
                       ? 'bg-red-50/60 dark:bg-red-950/20 hover:bg-red-100/80 dark:hover:bg-red-950/30 border-l-4 border-l-red-400'
                       : isAdvance
-                        ? 'bg-purple-50/60 dark:bg-purple-950/20 hover:bg-purple-100/80 dark:hover:bg-purple-950/30 border-l-4 border-l-purple-400'
-                        : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
+                        ? 'bg-teal-50/60 dark:bg-teal-950/20 hover:bg-teal-100/70 dark:hover:bg-teal-950/30 border-l-4 border-l-teal-400'
+                        : 'hover:bg-slate-50/60 dark:hover:bg-white/[0.03]'
                   }>
                     <td className="table-td font-mono text-xs text-blue-700">{r.receipt_display || r.receipt_no}</td>
                     <td className="table-td">
@@ -903,7 +903,7 @@ export default function FeeRecords() {
       {/* Advance Payment modal */}
       <Modal open={advModal} onClose={() => setAdvModal(false)} title="Advance Fee Payment" size="lg">
         <form onSubmit={handleAdvancePayment} className="space-y-4">
-          <div className="bg-purple-50 dark:bg-purple-950/30 rounded-lg p-3 text-sm text-purple-800 dark:text-purple-300">
+          <div className="bg-teal-50 dark:bg-teal-950/30 border border-teal-200/50 dark:border-teal-800/40 rounded-xl p-3.5 text-sm text-teal-800 dark:text-teal-300">
             Record advance fee payment for one or more students across multiple months. Fee records will be created for each selected month marked as &quot;Paid in Advance&quot;.
           </div>
 
@@ -916,7 +916,7 @@ export default function FeeRecords() {
               <div className="border border-gray-200 dark:border-gray-700 rounded-lg mt-1 max-h-40 overflow-y-auto shadow-sm">
                 {advStudentOptions.map(s => (
                   <button key={s.id} type="button"
-                    className="w-full text-left px-3 py-2 text-sm hover:bg-purple-50 dark:hover:bg-purple-950/30 flex items-center justify-between"
+                    className="w-full text-left px-3 py-2 text-sm hover:bg-teal-50 dark:hover:bg-teal-950/30 flex items-center justify-between"
                     onClick={() => addAdvStudent(s)}>
                     <span className="font-medium">{s.student_name}</span>
                     <span className="text-gray-400 text-xs">#{s.admission_no} - {s.current_class}
@@ -931,10 +931,10 @@ export default function FeeRecords() {
           {advSelected.length > 0 && (
             <div className="flex flex-wrap gap-2">
               {advSelected.map(s => (
-                <span key={s.id} className="inline-flex items-center gap-1 bg-purple-100 dark:bg-purple-900/40 text-purple-800 dark:text-purple-300 text-xs px-2.5 py-1.5 rounded-full">
-                  {s.student_name} <span className="text-purple-400">#{s.admission_no}</span>
+                <span key={s.id} className="inline-flex items-center gap-1 bg-teal-100 dark:bg-teal-900/40 text-teal-800 dark:text-teal-300 text-xs px-2.5 py-1.5 rounded-full ring-1 ring-teal-200/60 dark:ring-teal-400/20">
+                  {s.student_name} <span className="text-teal-500/70">#{s.admission_no}</span>
                   <button type="button" onClick={() => removeAdvStudent(s.id)}
-                    className="ml-1 text-purple-400 hover:text-purple-700">&times;</button>
+                    className="ml-1 text-teal-500/70 hover:text-teal-700">&times;</button>
                 </span>
               ))}
             </div>
@@ -957,10 +957,10 @@ export default function FeeRecords() {
                 return (
                   <button key={m.v} type="button"
                     onClick={() => toggleAdvMonth(m.v)}
-                    className={`px-3 py-2 rounded-lg text-sm font-medium border transition-all ${
+                    className={`px-3 py-2 rounded-xl text-sm font-medium border transition-all ${
                       sel
-                        ? 'bg-purple-600 text-white border-purple-600'
-                        : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-gray-700 hover:border-purple-400'
+                        ? 'bg-gradient-to-b from-teal-600 to-teal-700 text-white border-teal-600 shadow-[0_4px_12px_-4px_rgba(13,148,136,0.55)]'
+                        : 'bg-white/60 dark:bg-white/[0.04] text-slate-600 dark:text-slate-300 border-slate-200/60 dark:border-white/10 hover:border-teal-400 hover:bg-teal-50/40 dark:hover:bg-teal-950/20'
                     }`}>
                     {m.l.substring(0, 3)}
                   </button>
@@ -968,7 +968,7 @@ export default function FeeRecords() {
               })}
             </div>
             {advMonths.length > 0 && (
-              <p className="text-xs text-purple-600 mt-1">
+              <p className="text-xs text-teal-600 dark:text-teal-400 mt-1.5">
                 {advMonths.length} month(s) selected: {advMonths.map(m => MONTHS.find(x => x.v === m)?.l.substring(0, 3)).join(', ')}
               </p>
             )}
@@ -998,7 +998,7 @@ export default function FeeRecords() {
               </p>
               {advAmount && (
                 <p className="text-gray-500">
-                  Total: <strong className="text-purple-700">Rs {(Number(advAmount) * advSelected.length * advMonths.length).toLocaleString()}</strong>
+                  Total: <strong className="text-teal-700 dark:text-teal-400">Rs {(Number(advAmount) * advSelected.length * advMonths.length).toLocaleString()}</strong>
                 </p>
               )}
             </div>
@@ -1008,7 +1008,7 @@ export default function FeeRecords() {
             <button type="button" className="btn-secondary" onClick={() => setAdvModal(false)}>Cancel</button>
             <button type="submit"
               disabled={advLoading || !advSelected.length || !advMonths.length}
-              className="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm font-medium disabled:opacity-50">
+              className="btn-accent">
               {advLoading ? 'Processing...' : 'Record Advance Payment'}
             </button>
           </div>

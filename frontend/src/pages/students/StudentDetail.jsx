@@ -19,7 +19,7 @@ const STATUS_COLORS = {
   paid:      'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300',
   partial:   'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
   unpaid:    'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
-  advance:   'bg-purple-100 text-purple-800 dark:bg-purple-900/40 dark:text-purple-300',
+  advance:   'bg-teal-100 text-teal-800 dark:bg-teal-900/40 dark:text-teal-300',
   waived:    'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-300',
   no_record: 'bg-gray-50 text-gray-300 dark:bg-gray-800 dark:text-gray-600',
 }
@@ -116,7 +116,7 @@ export default function StudentDetail() {
             <span className="mx-2">/</span>
             <span className="text-gray-700 dark:text-gray-300">{student.student_name}</span>
           </nav>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{student.student_name}</h1>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 font-display tracking-tight">{student.student_name}</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">Admission # {student.admission_no}</p>
         </div>
         <div className="flex gap-2">
@@ -291,7 +291,7 @@ export default function StudentDetail() {
                           isDefaulter
                             ? 'bg-red-50/60 dark:bg-red-950/20 border-l-4 border-l-red-400'
                             : isAdvance
-                              ? 'bg-purple-50/60 dark:bg-purple-950/20 border-l-4 border-l-purple-400'
+                              ? 'bg-teal-50/60 dark:bg-teal-950/20 border-l-4 border-l-teal-400'
                               : !hasRecord
                                 ? 'bg-gray-50/50 dark:bg-gray-900/30'
                                 : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'

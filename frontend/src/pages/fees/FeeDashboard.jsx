@@ -158,7 +158,7 @@ export default function FeeDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Fee Dashboard</h1>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 font-display tracking-tight">Fee Dashboard</h1>
           <p className="text-sm text-gray-500 dark:text-gray-400">Class-wise fee overview — click a class to see individual students</p>
         </div>
         <div className="flex gap-2">
@@ -211,7 +211,7 @@ export default function FeeDashboard() {
                 title="Total Due"
                 value={`Rs ${Number(summary.total_due || 0).toLocaleString()}`}
                 sub="Total amount billed"
-                color="purple"
+                color="teal"
                 icon={<svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
               />
               <StatCard
@@ -427,7 +427,7 @@ export default function FeeDashboard() {
                               {pdfLoading === c.name ? 'Downloading...' : 'Collection Sheet PDF'}
                             </button>
                             <button
-                              className="text-xs bg-purple-600 text-white px-3 py-1.5 rounded-lg hover:bg-purple-700 transition-colors disabled:opacity-50"
+                              className="text-xs bg-gradient-to-b from-teal-600 to-teal-700 text-white px-3 py-1.5 rounded-lg hover:from-teal-700 hover:to-teal-800 transition-all shadow-[0_4px_12px_-4px_rgba(13,148,136,0.45)] disabled:opacity-50"
                               onClick={(e) => { e.stopPropagation(); handleDownloadBulkInvoices(c.name) }}
                               disabled={bulkPdfLoading === c.name}
                             >
@@ -511,7 +511,7 @@ export default function FeeDashboard() {
                                         isDefaulter
                                           ? 'bg-red-50/60 dark:bg-red-950/20 hover:bg-red-100/80 dark:hover:bg-red-950/30 border-l-4 border-l-red-400'
                                           : isAdvance
-                                            ? 'bg-purple-50/60 dark:bg-purple-950/20 hover:bg-purple-100/80 dark:hover:bg-purple-950/30 border-l-4 border-l-purple-400'
+                                            ? 'bg-teal-50/60 dark:bg-teal-950/20 hover:bg-teal-100/70 dark:hover:bg-teal-950/30 border-l-4 border-l-teal-400'
                                             : !r
                                               ? 'bg-amber-50/40 dark:bg-amber-950/10 hover:bg-amber-100/50'
                                               : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
@@ -525,7 +525,7 @@ export default function FeeDashboard() {
                                               <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0 animate-pulse" title="Defaulter" />
                                             )}
                                             {isAdvance && (
-                                              <span className="w-2 h-2 rounded-full bg-purple-500 flex-shrink-0" title="Paid in Advance" />
+                                              <span className="w-2 h-2 rounded-full bg-teal-500 flex-shrink-0" title="Paid in Advance" />
                                             )}
                                             <Link to={`/students/${s.id}`} className="hover:text-blue-600">{s.student_name}</Link>
                                           </div>

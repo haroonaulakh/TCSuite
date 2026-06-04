@@ -72,7 +72,7 @@ export default function FeeStructures() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Fee Structures</h1>
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 font-display tracking-tight">Fee Structures</h1>
           <p className="text-sm text-gray-500">Monthly fee per class</p>
         </div>
         <button className="btn-primary" onClick={openAdd}>

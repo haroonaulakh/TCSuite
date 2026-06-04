@@ -45,8 +45,8 @@ export default function Dashboard() {
     <div className="p-6 space-y-6">
       {/* Header */}
       <div>
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Dashboard</h1>
-        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{month} overview</p>
+        <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100 font-display tracking-tight">Dashboard</h1>
+        <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">{month} overview</p>
       </div>
 
       {/* Stats grid */}
@@ -91,7 +91,7 @@ export default function Dashboard() {
           title="Fully Paid"
           value={stats?.paid_count}
           sub="Records this month"
-          color="purple"
+          color="teal"
           icon={
             <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -103,14 +103,17 @@ export default function Dashboard() {
 
       {/* Top Defaulters — ranked by highest pending balance */}
       <div className="card overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100 dark:border-gray-700">
-          <div className="flex items-center gap-2">
-            <span className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-            <h2 className="font-semibold text-gray-800 dark:text-gray-200">Top Defaulters</h2>
-            <span className="text-xs text-gray-400">(ranked by highest pending dues)</span>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-200/50 dark:border-white/5">
+          <div className="flex items-center gap-2.5">
+            <span className="relative flex w-2.5 h-2.5">
+              <span className="absolute inset-0 rounded-full bg-rose-500 animate-ping opacity-60" />
+              <span className="relative inline-flex rounded-full w-2.5 h-2.5 bg-rose-500" />
+            </span>
+            <h2 className="font-semibold text-slate-800 dark:text-slate-100 font-display tracking-tight">Top Defaulters</h2>
+            <span className="text-xs text-slate-400">ranked by highest pending dues</span>
           </div>
-          <Link to="/fees/records?status=unpaid" className="text-sm text-blue-600 hover:underline">
-            View all
+          <Link to="/fees/records?status=unpaid" className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium">
+            View all →
           </Link>
         </div>
         {recent.length === 0 ? (
@@ -170,20 +173,33 @@ export default function Dashboard() {
       {/* Quick links */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         {[
-          { to: '/students/new', label: 'Enrol New Student', color: 'bg-blue-600', icon: '＋' },
-          { to: '/classes', label: 'Manage Classes', color: 'bg-teal-600', icon: '🏫' },
-          { to: '/fees', label: 'Fee Dashboard', color: 'bg-indigo-600', icon: '📊' },
-          { to: '/fees/records', label: 'Fee Records', color: 'bg-emerald-600', icon: '₨' },
-          { to: '/fees/structures', label: 'Fee Structures', color: 'bg-violet-600', icon: '⚙' },
-          { to: '/academic-years', label: 'Academic Years', color: 'bg-amber-600', icon: '📅' },
+          { path: '/students/new',    label: 'Enrol New Student', from: '#3b82f6', end: '#1d4ed8', icon: '＋' },
+          { path: '/classes',         label: 'Manage Classes',    from: '#14b8a6', end: '#0f766e', icon: '🏫' },
+          { path: '/fees',            label: 'Fee Dashboard',     from: '#6366f1', end: '#4338ca', icon: '📊' },
+          { path: '/fees/records',    label: 'Fee Records',       from: '#10b981', end: '#047857', icon: '₨' },
+          { path: '/fees/structures', label: 'Fee Structures',    from: '#0ea5e9', end: '#0369a1', icon: '⚙' },
+          { path: '/academic-years',  label: 'Academic Years',    from: '#f59e0b', end: '#b45309', icon: '📅' },
         ].map((item) => (
           <Link
-            key={item.to}
-            to={item.to}
-            className={`${item.color} text-white rounded-xl p-5 flex items-center gap-3 hover:opacity-90 transition-opacity`}
+            key={item.path}
+            to={item.path}
+            className="group relative rounded-2xl p-5 flex items-center gap-4 transition-all duration-300 hover:-translate-y-0.5 overflow-hidden"
           >
-            <span className="text-2xl">{item.icon}</span>
-            <span className="font-medium">{item.label}</span>
+            <span
+              className="absolute inset-0 transition-opacity duration-300"
+              style={{
+                background: `linear-gradient(135deg, ${item.from} 0%, ${item.end} 100%)`,
+                boxShadow: `0 10px 30px -10px ${item.end}80`,
+              }}
+            />
+            <span className="absolute inset-0 bg-gradient-to-br from-white/15 via-transparent to-transparent pointer-events-none" />
+            <span className="relative text-2xl drop-shadow">{item.icon}</span>
+            <span className="relative font-semibold text-white tracking-tight">{item.label}</span>
+            <span className="relative ml-auto text-white/80 transition-transform group-hover:translate-x-0.5">
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.8} d="M9 5l7 7-7 7" />
+              </svg>
+            </span>
           </Link>
         ))}
       </div>
