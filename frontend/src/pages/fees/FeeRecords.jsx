@@ -5,7 +5,7 @@ import {
   getFeeRecords, createFeeRecord, recordPayment,
   editFeeRecord, deleteFeeRecord,
   downloadStudentInvoicePdf, downloadClassInvoicePdf,
-  getClassRooms, advancePayment,
+  getClassRooms, advancePayment, lookupReceipt,
 } from '../../api/feesApi'
 import { getStudents } from '../../api/studentsApi'
 import Badge from '../../components/Badge'
@@ -73,6 +73,28 @@ export default function FeeRecords() {
   const [advAmount, setAdvAmount]             = useState('')
   const [advRemarks, setAdvRemarks]           = useState('')
   const [advLoading, setAdvLoading]           = useState(false)
+
+  const [receiptQuery, setReceiptQuery]       = useState('')
+  const [receiptResult, setReceiptResult]     = useState(null)
+  const [receiptError, setReceiptError]       = useState('')
+  const [receiptSearching, setReceiptSearching] = useState(false)
+
+  const handleReceiptLookup = async (e) => {
+    e.preventDefault()
+    const q = receiptQuery.trim().replace(/-/g, '')
+    if (!q) return
+    setReceiptSearching(true)
+    setReceiptResult(null)
+    setReceiptError('')
+    try {
+      const { data: rec } = await lookupReceipt(q)
+      setReceiptResult(rec)
+    } catch (err) {
+      setReceiptError(err.response?.data?.error || 'Receipt not found')
+    } finally {
+      setReceiptSearching(false)
+    }
+  }
 
   useEffect(() => {
     getClassRooms()
@@ -355,6 +377,129 @@ export default function FeeRecords() {
         </div>
       </div>
 
+      {/* Receipt Lookup */}
+      <div className="card p-4 bg-emerald-50 border-emerald-200 dark:bg-emerald-950/30 dark:border-emerald-800">
+        <p className="text-xs font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wide mb-3">
+          Receipt Lookup
+        </p>
+        <form onSubmit={handleReceiptLookup} className="flex gap-3 items-end flex-wrap">
+          <div className="flex-1 min-w-[200px]">
+            <input
+              className="input bg-white dark:bg-gray-800"
+              placeholder="Enter receipt # (e.g. 2026-0001 or just 0001)..."
+              value={receiptQuery}
+              onChange={e => setReceiptQuery(e.target.value)}
+            />
+          </div>
+          <button
+            type="submit"
+            disabled={receiptSearching || !receiptQuery.trim()}
+            className="btn-primary disabled:opacity-50"
+          >
+            {receiptSearching ? 'Searching...' : 'Find'}
+          </button>
+          {(receiptResult || receiptError) && (
+            <button
+              type="button"
+              className="btn-secondary"
+              onClick={() => { setReceiptResult(null); setReceiptError(''); setReceiptQuery('') }}
+            >
+              Clear
+            </button>
+          )}
+        </form>
+
+        {receiptError && (
+          <p className="mt-2 text-sm text-red-600 dark:text-red-400">{receiptError}</p>
+        )}
+
+        {receiptResult && (() => {
+          const r = receiptResult
+          const s = r.student || {}
+          const isDefaulter = r.status === 'unpaid' || r.status === 'partial'
+          const isAdvance = r.status === 'advance' || r.is_advance
+          return (
+            <div className="mt-3 overflow-x-auto">
+              <table className="w-full min-w-[1150px]">
+                <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-100 dark:border-gray-700">
+                  <tr>
+                    <th className="table-th">Receipt</th>
+                    <th className="table-th">Student</th>
+                    <th className="table-th">Class</th>
+                    <th className="table-th">Period</th>
+                    <th className="table-th">Prev Bal</th>
+                    <th className="table-th">Fee</th>
+                    <th className="table-th">Misc.</th>
+                    <th className="table-th">Total</th>
+                    <th className="table-th text-green-700">Paid</th>
+                    <th className="table-th text-red-600">Balance</th>
+                    <th className="table-th">Status</th>
+                    <th className="table-th">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr className={
+                    isDefaulter
+                      ? 'bg-red-50/60 dark:bg-red-950/20 border-l-4 border-l-red-400'
+                      : isAdvance
+                        ? 'bg-purple-50/60 dark:bg-purple-950/20 border-l-4 border-l-purple-400'
+                        : 'bg-white dark:bg-gray-900'
+                  }>
+                    <td className="table-td font-mono text-xs text-blue-700">{r.receipt_display || r.receipt_no}</td>
+                    <td className="table-td">
+                      <div className="flex items-center gap-1.5">
+                        {isDefaulter && <span className="w-2 h-2 rounded-full bg-red-500 flex-shrink-0 animate-pulse" />}
+                        <div>
+                          <Link to={`/students/${s.id}`} className="font-medium hover:text-blue-600 block leading-tight">
+                            {s.student_name}
+                          </Link>
+                          <span className="text-xs text-gray-400">#{s.admission_no}</span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="table-td text-sm">{s.current_class}</td>
+                    <td className="table-td text-xs">{r.month_name} {r.year}</td>
+                    <td className="table-td font-mono text-xs">
+                      {Number(r.previous_balance) > 0
+                        ? <span className="text-amber-600">Rs {Number(r.previous_balance).toLocaleString()}</span>
+                        : <span className="text-gray-300">0</span>}
+                    </td>
+                    <td className="table-td font-mono text-xs">Rs {Number(r.current_fee).toLocaleString()}</td>
+                    <td className="table-td font-mono text-xs">
+                      {Number(r.misc_charges) > 0
+                        ? <span className="text-orange-600">Rs {Number(r.misc_charges).toLocaleString()}</span>
+                        : <span className="text-gray-300">0</span>}
+                    </td>
+                    <td className="table-td font-mono text-xs font-medium">Rs {Number(r.total_amount).toLocaleString()}</td>
+                    <td className="table-td font-mono text-xs text-green-700">Rs {Number(r.amount_paid).toLocaleString()}</td>
+                    <td className="table-td font-mono text-xs">
+                      {Number(r.balance) > 0
+                        ? <span className="text-red-600 font-bold">Rs {Number(r.balance).toLocaleString()}</span>
+                        : <span className="text-gray-400">0</span>}
+                    </td>
+                    <td className="table-td"><Badge value={r.status} /></td>
+                    <td className="table-td">
+                      <div className="flex items-center gap-1 flex-wrap">
+                        <button className="text-xs bg-amber-50 text-amber-700 px-2 py-1 rounded hover:bg-amber-100"
+                          onClick={() => openEditModal(r)}>Edit</button>
+                        <button
+                          className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded hover:bg-green-100 disabled:opacity-50"
+                          onClick={() => handleDownloadPdf(r.id, r.receipt_display || r.receipt_no)}
+                          disabled={pdfLoading === r.id}>
+                          {pdfLoading === r.id ? '...' : 'PDF'}
+                        </button>
+                        <Link to={`/fees/invoice/${r.id}`} target="_blank"
+                          className="text-xs bg-gray-50 text-gray-500 px-2 py-1 rounded hover:bg-gray-100">Print</Link>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          )
+        })()}
+      </div>
+
       {/* Period selector */}
       <div className="card p-4 bg-blue-50 border-blue-200 dark:bg-blue-950/30 dark:border-blue-800">
         <p className="text-xs font-semibold text-blue-700 uppercase tracking-wide mb-3">Filter Period</p>
@@ -434,7 +579,7 @@ export default function FeeRecords() {
                         ? 'bg-purple-50/60 dark:bg-purple-950/20 hover:bg-purple-100/80 dark:hover:bg-purple-950/30 border-l-4 border-l-purple-400'
                         : 'hover:bg-gray-50 dark:hover:bg-gray-800/50'
                   }>
-                    <td className="table-td font-mono text-xs text-blue-700">{r.receipt_no}</td>
+                    <td className="table-td font-mono text-xs text-blue-700">{r.receipt_display || r.receipt_no}</td>
                     <td className="table-td">
                       <div className="flex items-center gap-1.5">
                         {isDefaulter && (
@@ -487,7 +632,7 @@ export default function FeeRecords() {
                         </button>
                         <button
                           className="text-xs bg-green-50 text-green-700 px-2 py-1 rounded hover:bg-green-100 disabled:opacity-50"
-                          onClick={() => handleDownloadPdf(r.id, r.receipt_no)}
+                          onClick={() => handleDownloadPdf(r.id, r.receipt_display || r.receipt_no)}
                           disabled={pdfLoading === r.id}
                           title="Download PDF Invoice"
                         >
@@ -622,7 +767,7 @@ export default function FeeRecords() {
         {payModal && (
           <form onSubmit={handlePayment} className="space-y-4">
             <div className="bg-blue-50 rounded-lg p-4 text-sm space-y-1">
-              <p><span className="text-gray-500">Receipt:</span> <strong>{payModal.receipt_no}</strong></p>
+              <p><span className="text-gray-500">Receipt:</span> <strong>{payModal.receipt_display || payModal.receipt_no}</strong></p>
               <p><span className="text-gray-500">Student:</span> <strong>{payModal.student_name}</strong></p>
               <p><span className="text-gray-500">Period:</span> {payModal.month_name} {payModal.year}</p>
               <p><span className="text-gray-500">Total Due:</span> Rs {Number(payModal.total_amount).toLocaleString()}</p>
@@ -653,7 +798,7 @@ export default function FeeRecords() {
         {editModal && (
           <form onSubmit={handleEdit} className="space-y-4">
             <div className="bg-blue-50 rounded-lg p-3 text-sm space-y-1">
-              <p><span className="text-gray-500">Receipt:</span> <strong>{editModal.receipt_no}</strong></p>
+              <p><span className="text-gray-500">Receipt:</span> <strong>{editModal.receipt_display || editModal.receipt_no}</strong></p>
               <p><span className="text-gray-500">Student:</span> <strong>{editModal.student_name}</strong> (#{editModal.admission_no})</p>
               <p><span className="text-gray-500">Period:</span> {editModal.month_name} {editModal.year}</p>
             </div>
@@ -729,7 +874,7 @@ export default function FeeRecords() {
             <div className="bg-red-50 rounded-lg p-4 text-sm space-y-1">
               <p className="text-red-700 font-semibold">Are you sure you want to delete this record?</p>
               <p className="text-gray-600 mt-2">
-                <span className="text-gray-500">Receipt:</span> <strong>{deleteConfirm.receipt_no}</strong>
+                <span className="text-gray-500">Receipt:</span> <strong>{deleteConfirm.receipt_display || deleteConfirm.receipt_no}</strong>
               </p>
               <p className="text-gray-600">
                 <span className="text-gray-500">Student:</span> <strong>{deleteConfirm.student_name}</strong>

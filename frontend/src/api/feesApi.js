@@ -70,6 +70,9 @@ export const getDistinctYears = () =>
 export const getStudentFeeHistory = (params) =>
   client.get('/fees/records/student-fee-history/', { params })
 
+export const lookupReceipt = (receipt) =>
+  client.get('/fees/records/lookup-receipt/', { params: { receipt } })
+
 export const downloadBalanceSheetPdf = (params) =>
   client.get('/fees/records/balance-sheet-pdf/', { params, responseType: 'blob' })
 

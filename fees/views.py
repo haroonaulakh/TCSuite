@@ -231,6 +231,27 @@ class FeeRecordViewSet(viewsets.ModelViewSet):
             qs = qs.filter(student__current_class__iexact=current_class)
         return qs
 
+    @action(detail=False, methods=['get'], url_path='lookup-receipt')
+    def lookup_receipt(self, request):
+        """Look up a fee record by receipt number (full or partial).
+        Accepts ?receipt=20260001 or ?receipt=0001 (assumes current year)."""
+        receipt = request.query_params.get('receipt', '').strip()
+        if not receipt:
+            return Response({'error': 'receipt parameter is required'},
+                            status=status.HTTP_400_BAD_REQUEST)
+
+        if receipt.isdigit() and len(receipt) <= 4:
+            from django.utils import timezone
+            receipt = f"{timezone.now().year}{receipt.zfill(4)}"
+
+        try:
+            record = FeeRecord.objects.select_related('student').get(receipt_no=receipt)
+        except FeeRecord.DoesNotExist:
+            return Response({'error': f'No record found for receipt #{receipt}'},
+                            status=status.HTTP_404_NOT_FOUND)
+
+        return Response(FeeRecordDetailSerializer(record).data)
+
     # Record payment 
     @action(detail=True, methods=['patch'], url_path='record-payment')
     def record_payment(self, request, pk=None):

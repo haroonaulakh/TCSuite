@@ -36,11 +36,12 @@ class FeeRecordListSerializer(serializers.ModelSerializer):
     month_name    = serializers.CharField(source='get_month_display',     read_only=True)
     f_g_name      = serializers.CharField(source='student.f_g_name',     read_only=True)
     f_g_contact   = serializers.CharField(source='student.f_g_contact',  read_only=True)
+    receipt_display = serializers.SerializerMethodField()
 
     class Meta:
         model  = FeeRecord
         fields = [
-            'id', 'receipt_no',
+            'id', 'receipt_no', 'receipt_display',
             'student', 'student_name', 'admission_no', 'current_class',
             'f_g_name', 'f_g_contact',
             'month', 'month_name', 'year',
@@ -49,21 +50,34 @@ class FeeRecordListSerializer(serializers.ModelSerializer):
             'due_date', 'payment_date', 'receipt_date',
         ]
 
+    def get_receipt_display(self, obj):
+        r = obj.receipt_no or ''
+        if len(r) == 8 and r.isdigit():
+            return f"{r[:4]}-{r[4:]}"
+        return r
+
 
 class FeeRecordDetailSerializer(serializers.ModelSerializer):
     student    = StudentFeeInfoSerializer(read_only=True)
     month_name = serializers.CharField(source='get_month_display', read_only=True)
+    receipt_display = serializers.SerializerMethodField()
 
     class Meta:
         model  = FeeRecord
         fields = [
-            'id', 'receipt_no',
+            'id', 'receipt_no', 'receipt_display',
             'student', 'month', 'month_name', 'year',
             'previous_balance', 'current_fee', 'total_amount',
             'amount_paid', 'balance', 'status', 'is_advance', 'misc_charges',
             'receipt_date', 'due_date', 'payment_date',
             'remarks', 'created_at', 'updated_at',
         ]
+
+    def get_receipt_display(self, obj):
+        r = obj.receipt_no or ''
+        if len(r) == 8 and r.isdigit():
+            return f"{r[:4]}-{r[4:]}"
+        return r
 
 
 class FeeRecordCreateSerializer(serializers.ModelSerializer):
@@ -151,16 +165,23 @@ class FeePaymentSerializer(serializers.ModelSerializer):
 class FeeInvoiceSerializer(serializers.ModelSerializer):
     student    = StudentFeeInfoSerializer(read_only=True)
     month_name = serializers.CharField(source='get_month_display', read_only=True)
+    receipt_display = serializers.SerializerMethodField()
 
     class Meta:
         model  = FeeRecord
         fields = [
-            'id', 'receipt_no',
+            'id', 'receipt_no', 'receipt_display',
             'student', 'month', 'month_name', 'year',
             'previous_balance', 'current_fee', 'total_amount',
             'amount_paid', 'balance', 'status', 'is_advance', 'misc_charges',
             'receipt_date', 'due_date', 'payment_date', 'remarks',
         ]
+
+    def get_receipt_display(self, obj):
+        r = obj.receipt_no or ''
+        if len(r) == 8 and r.isdigit():
+            return f"{r[:4]}-{r[4:]}"
+        return r
 
 
 class BulkGenerateSerializer(serializers.Serializer):

@@ -26,6 +26,14 @@ def _num(v):
         return "Rs 0"
 
 
+def _fmt_receipt(r):
+    """Format receipt number: 20260001 → 2026-0001"""
+    r = str(r or '')
+    if len(r) == 8 and r.isdigit():
+        return f"{r[:4]}-{r[4:]}"
+    return r
+
+
 def _styles():
     ss = getSampleStyleSheet()
     ss.add(ParagraphStyle('SchoolName', parent=ss['Heading1'], fontSize=18,
@@ -60,7 +68,7 @@ def generate_student_invoice_pdf(record):
     s = record['student']
     story.append(Paragraph("Receipt Information", ss['SectionHead']))
     info_data = [
-        ['Receipt No:', record['receipt_no'], 'Date:', str(record.get('receipt_date', ''))],
+        ['Receipt No:', _fmt_receipt(record['receipt_no']), 'Date:', str(record.get('receipt_date', ''))],
         ['Period:', f"{MONTHS[record['month']]} {record['year']}", 'Status:',
          record['status'].upper()],
     ]
@@ -187,7 +195,7 @@ def generate_class_invoice_pdf(class_name, month, year, records, summary):
         s = r.get('student', {})
         rows.append([
             str(i),
-            r.get('receipt_no', ''),
+            _fmt_receipt(r.get('receipt_no', '')),
             str(s.get('admission_no', '')),
             s.get('student_name', ''),
             s.get('f_g_name', ''),
@@ -301,7 +309,7 @@ def _draw_mini_invoice(c, x, y, w, h, record, copy_label):
     c.drawString(cx, row_y, 'Receipt:')
     c.setFillColor(colors.black)
     c.setFont('Helvetica-Bold', 6.5)
-    c.drawString(cx + label_offset, row_y, str(record.get('receipt_no', '')))
+    c.drawString(cx + label_offset, row_y, _fmt_receipt(record.get('receipt_no', '')))
 
     c.setFont('Helvetica', 6.5)
     c.setFillColor(gray)

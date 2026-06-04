@@ -49,12 +49,26 @@ class FeeStructure(models.Model):
         return f"{self.class_name} — Rs. {self.monthly_fee}/month"
 
 
-def generate_receipt_no():
-    last = FeeRecord.objects.order_by('id').last()
-    if not last:
-        return 'RCP-0001'
-    last_no = int(last.receipt_no.split('-')[1])
-    return f"RCP-{str(last_no + 1).zfill(4)}"
+def generate_receipt_no(year=None):
+    """Generate receipt number in format YYYYNNNN, e.g. 20260001.
+    Sequence resets to 0001 each year."""
+    from django.utils import timezone
+    if year is None:
+        year = timezone.now().year
+    year_prefix = str(year)
+
+    last = (
+        FeeRecord.objects
+        .filter(receipt_no__startswith=year_prefix)
+        .order_by('-receipt_no')
+        .values_list('receipt_no', flat=True)
+        .first()
+    )
+    if last:
+        seq = int(last[4:]) + 1
+    else:
+        seq = 1
+    return f"{year_prefix}{str(seq).zfill(4)}"
 
 
 class FeeRecord(models.Model):
@@ -107,7 +121,7 @@ class FeeRecord(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.receipt_no:
-            self.receipt_no = generate_receipt_no()
+            self.receipt_no = generate_receipt_no(self.year)
 
         self.total_amount = (self.previous_balance or 0) + (self.current_fee or 0) + (self.misc_charges or 0)
         self.balance      = self.total_amount - (self.amount_paid or 0)
